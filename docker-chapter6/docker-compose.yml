@@ -1,0 +1,74 @@
+services:
+
+  licensing-service-chapter6:
+    image: vadimeladii7/licensing-service-chapter6:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=dev"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter6:8071"
+    networks:
+      - backend
+    depends_on:
+      config-server-chapter6:
+        condition: service_started
+      database:
+        condition: service_healthy
+
+  organization-service-chapter6:
+    image: vadimeladii7/organization-service-chapter6:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=dev"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter6:8071"
+    networks:
+      - backend
+    depends_on:
+      config-server-chapter6:
+        condition: service_started
+      database:
+        condition: service_healthy
+
+  config-server-chapter6:
+    image: vadimeladii7/config-server-chapter6:latest
+    ports:
+      - "8071:8071"
+    networks:
+      - backend
+
+  eureka-server-chapter6:
+    image: vadimeladii7/eureka-server-chapter6:latest
+    ports:
+      - "8070:8070"
+    environment:
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter6:8071"
+      - "SPRING_PROFILES_ACTIVE=dev"
+    networks:
+      - backend
+    depends_on:
+      config-server-chapter6:
+        condition: service_started
+
+  database:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "ostock_dev"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./data.sql:/docker-entrypoint-initdb.d/2-data.sql
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  backend:
+    driver: bridge

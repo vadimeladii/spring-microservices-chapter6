@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: organization-service-chapter6
+  profiles:
+    active: default
+  cloud:
+    config:
+      uri: http://localhost:8071
+server:
+  port: 8081
